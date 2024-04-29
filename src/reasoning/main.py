@@ -1,5 +1,5 @@
-from .arguments import ReasoningArgumentsParser
-from .reasoning_llm import ReasoningLLM
+from arguments import ReasoningArgumentsParser
+from reasoning_llm import ReasoningLLM
 
 # BEGIN - Example Usage of the Self-Consistency CoT Reasoning Module #
 # 1. Example usage of the Greedy CoT Reasoning Module

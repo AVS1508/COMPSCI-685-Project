@@ -3,7 +3,7 @@ import numpy as np
 import re
 from typing import List, Tuple
 
-from .reasoning_configs import DATASETS_CONFIGURATION, EXEMPLARS
+from reasoning_configs import DATASETS_CONFIGURATION, EXEMPLARS
 
 def load_dataset(dataset_name: str) -> datasets.Dataset:
     """Load the dataset based on the dataset name
@@ -56,6 +56,7 @@ def convert_dataset_to_prompts_and_answers(dataset: datasets.Dataset, dataset_na
             _formulate_prompt(
                 qa_pair[DATASETS_CONFIGURATION[dataset_name]['question']], 
                 instruction_tuned, 
+                DATASETS_CONFIGURATION[dataset_name]['instruction'],
                 shots_prefix
             )
         )
@@ -74,7 +75,7 @@ def get_majority_vote_answer(sampled_sequences: List[str], dataset_name: str) ->
     """
     # Clean the answers and remove empty strings
     answers = [_answer_cleaning(sequence, dataset_name) for sequence in sampled_sequences]
-    answers = [answer for answer in answers if answer != ""]
+    answers = [answer.strip() for answer in answers if answer != ""]
     # If no answers are present, return an empty string
     if len(answers) == 0:
         return ""
@@ -82,7 +83,7 @@ def get_majority_vote_answer(sampled_sequences: List[str], dataset_name: str) ->
     answers, answer_counts = np.unique(answers, return_counts=True)
     return answers[np.argmax(answer_counts)]
 
-def _formulate_prompt(question: str, instruction_tuned: bool, shots_prefix: str) -> str:
+def _formulate_prompt(question: str, instruction_tuned: bool, instruction_prefix: str, shots_prefix: str) -> str:
     """Formulate a prompt for the reasoning task
 
     Args:
@@ -97,11 +98,13 @@ def _formulate_prompt(question: str, instruction_tuned: bool, shots_prefix: str)
         str: The formulated prompt
     """
     prompt = ""
-    # Add the instruction-tuned prefix if required
+    # Add the instruction prefix with special tokens if instruction-tuned else add the instruction prefix as is
     if instruction_tuned:
         raise NotImplementedError("Instruction-tuned models are not yet supported.")
+    else:
+        prompt += f"{instruction_prefix}\n\n"
     # Add the shots prefix and the target question
-    prompt += shots_prefix + f"Q: {question}\nA: "
+    prompt += shots_prefix + f"Q: {question}\nA:"
     return prompt
 
 def _answer_cleaning(sequence: str, dataset_name: str) -> str:

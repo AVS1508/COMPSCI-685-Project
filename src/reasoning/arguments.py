@@ -9,21 +9,22 @@ class ReasoningArgumentsParser:
         self.parser = argparse.ArgumentParser(description='Generate sequences via LLM inference')
         # Add arguments pertaining to the inference inputs and outputs for model
         self.parser.add_argument('--model', type=str, default='facebook/opt-125m', help='LLM to use for inference')
-        self.parser.add_argument('--instruction_tuned', action='store_true', help='Flag to use instruction-tuned models')
-        self.parser.add_argument('--num_shots', type=int, default=0, help='Number of shots to use for inference')
-        self.parser.add_argument('--output_file', type=str, default='output.json', help='JSON file to write the generated sequences and information to')
+        self.parser.add_argument('--instruction-tuned', action='store_true', help='Flag to use instruction-tuned models')
+        self.parser.add_argument('--num-shots', type=int, default=0, help='Number of shots to use for inference')
+        self.parser.add_argument('--output-file', type=str, default='results/output.json', help='JSON file to write the generated sequences and information to')
         # Add arguments pertaining to the inference inputs and outputs for dataset
         self.parser.add_argument('--dataset', type=str, default='gsm8k', help='Dataset to perform inference on')
         self.parser.add_argument('--dataset-size', type=int, default=100, help='Number of dataset instances to use for inference')
-        self.parser.add_argument('--dataset-offset', type=int, default=100, help='Offset for dataset instances to use for inference')
+        self.parser.add_argument('--dataset-offset', type=int, default=0, help='Offset for dataset instances to use for inference')
         # Add arguments pertaining to the GPU memory utilization and maximum output tokens
-        self.parser.add_argument('--gpu_memory_utilization', type=float, default=0.8, help='Fraction of GPU memory to use')
-        self.parser.add_argument('--max_out_tokens', type=int, default=512, help='Maximum number of tokens to generate for each sequence')
+        self.parser.add_argument('--gpu-memory-utilization', type=float, default=0.8, help='Fraction of GPU memory to use')
+        self.parser.add_argument('--max-out-tokens', type=int, default=512, help='Maximum number of tokens to generate for each sequence')
         # Add arguments for sampling parameters/knobs
-        self.parser.add_argument('--num_samples', '-N', type=int, default=1, help='Number of samples to generate for each prompt')
+        self.parser.add_argument('--num-samples', '-N', type=int, default=5, help='Number of samples to generate for each prompt')
         self.parser.add_argument('--temperature', '-T', type=float, default=0.5, help='Temperature knob for sampling')
-        self.parser.add_argument('--top_k', '-k', type=int, default=40, help='Top-k knob for sampling')
-        self.parser.add_argument('--top_p', '-p', type=float, default=1, help='Top-p (nucleus) knob for sampling')
+        self.parser.add_argument('--top-k', '-k', type=int, default=40, help='Top-k knob for sampling')
+        self.parser.add_argument('--top-p', '-p', type=float, default=1, help='Top-p (nucleus) knob for sampling')
+        self.parser.add_argument('--stop', type=str, default='\n\n', help='Stop token for sampling')
         # Add argument for the greedy decoding and modified self-consistency pipeline, default is baseline self-consistency
         self.parser.add_argument('--greedy', action='store_true', help='Flag to use greedy decoding instead of sampling')
         self.parser.add_argument('--recurring-self-consistency', action='store_true', help='Flag to use the modified self-consistency pipeline instead of the baseline self-consistency')
@@ -55,6 +56,7 @@ class ReasoningArgumentsParser:
             'temperature': args.temperature,
             'top_k': args.top_k,
             'top_p': args.top_p,
+            'stop': args.stop,
             'greedy': args.greedy,
             'recurring_self_consistency': args.recurring_self_consistency,
             'majority_threshold': args.majority_threshold,

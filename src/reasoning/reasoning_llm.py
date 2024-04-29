@@ -1,7 +1,7 @@
 import json
 from typing import List
 from vllm import LLM, SamplingParams
-from .reasoning_utils import load_dataset,\
+from reasoning_utils import load_dataset,\
     convert_dataset_to_prompts_and_answers,\
     get_majority_vote_answer
 
@@ -19,7 +19,8 @@ class ReasoningLLM:
             n = 1,
             max_tokens=kwargs['max_out_tokens'],
             seed=kwargs['generation_seed'],
-            temperature=1.0
+            temperature=1.0,
+            stop=kwargs['stop']
         ) if kwargs['greedy'] == True else SamplingParams(
             n = kwargs['num_samples'],
             max_tokens=kwargs['max_out_tokens'],
@@ -27,6 +28,7 @@ class ReasoningLLM:
             temperature=kwargs['temperature'],
             top_k=kwargs['top_k'],
             top_p=kwargs['top_p'],
+            stop=kwargs['stop']
         )
         # Load the dataset through dataset configuration and select the specified range after shuffling
         self.dataset_name = kwargs['dataset']
@@ -61,7 +63,10 @@ class ReasoningLLM:
         """Baseline reasoning pipeline for the chain-of-thought reasoning tasks
         """
         # Generate the sequences for the prompts
-        generations = self.model(self.prompts, self.sampling_params)
+        generations = self.model.generate(
+            self.prompts, 
+            self.sampling_params
+        )
         outputs = []
         # Iterate over the generations and save the reasoning results
         for generation_index, generation in enumerate(generations):
@@ -69,7 +74,8 @@ class ReasoningLLM:
             generated_sequences = [generation.outputs[i].text for i in range(len(generation.outputs))]
             outputs.append({
                 "input_prompt": input_prompt,
-                "ground_truth_answer": self.answers[generation_index],
+                "ground_truth_reasoning": self.answers[generation_index].split("####")[0],
+                "ground_truth_answer": self.answers[generation_index].split("####")[1].strip(),
                 "generated_sequences": generated_sequences,
                 "majority_vote_answer": get_majority_vote_answer(generated_sequences, self.dataset_name),
             })
