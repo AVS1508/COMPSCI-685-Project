@@ -12,7 +12,8 @@ class ReasoningLLM:
         # Initialize the LLM model with the specified model and GPU memory utilization
         self.model = LLM(
             model = kwargs['model'], 
-            gpu_memory_utilization = kwargs['gpu_memory_utilization']
+            gpu_memory_utilization = kwargs['gpu_memory_utilization'],
+            dtype="half"
         )
         # Set the sampling parameters based on the keyword arguments
         self.sampling_params = SamplingParams(
