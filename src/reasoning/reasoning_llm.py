@@ -102,9 +102,6 @@ class ReasoningLLM:
         if not self.recurring_self_consistency:
             raise ValueError("Recurrent self-consistency pipeline not selected")
         
-        if self.use_majority_threshold:
-            raise NotImplementedError("Majority threshold termination not implemented")
-        
         outputs = [{
             "input_prompts": [],
             "ground_truth_reasonings": self.answers[i].split("####")[0],
@@ -113,6 +110,7 @@ class ReasoningLLM:
             "answer_distribution": [],
             "answer_eliminated": [],
             "majority_vote_answers": [],
+            "final_answer": "",
         } for i in range(len(self.prompts))]
         
         index_mapping = {i: i for i in range(len(self.prompts))}
@@ -124,21 +122,35 @@ class ReasoningLLM:
             )
             
             for generation_index, generation in enumerate(generations):
+                gen_index = index_mapping[generation_index]
+                
                 input_prompt = generation.prompt
                 generated_sequences = [generation.outputs[i].text for i in range(len(generation.outputs))]
                 answer_distribution = get_answer_distribution(generated_sequences, self.dataset_name)
-                majority_vote_answer = str(answer_distribution[0][0]) if len(answer_distribution) > 0 else ""
+                majority_vote_answer = answer_distribution[0][0] if len(answer_distribution) > 0 else ""
                 multiple_answers = len(answer_distribution) > 1
                 answer_to_be_eliminated = answer_distribution[-1][0] if multiple_answers else None
                 
-                outputs[generation_index]["input_prompts"].append(input_prompt)
-                outputs[generation_index]["generated_sequences"].append(generated_sequences)
-                outputs[generation_index]["answer_distribution"].append(answer_distribution)
-                outputs[generation_index]["answer_eliminated"].append(answer_to_be_eliminated)
-                outputs[generation_index]["majority_vote_answers"].append(majority_vote_answer)
+                outputs[gen_index]["input_prompts"].append(input_prompt)
+                outputs[gen_index]["generated_sequences"].append(generated_sequences)
+                outputs[gen_index]["answer_distribution"].append(answer_distribution)
+                outputs[gen_index]["answer_eliminated"].append(answer_to_be_eliminated)
+                outputs[gen_index]["majority_vote_answers"].append(majority_vote_answer)
                 
-                if answer_to_be_eliminated is not None and time_step < self.time_steps:
+                if self.use_majority_threshold and answer_distribution[0][1] >= self.majority_threshold:
+                    outputs[gen_index]["final_answer"] = majority_vote_answer
+                    self.prompts[generation_index] = None
+                elif answer_to_be_eliminated is not None and time_step < self.time_steps:
                     self.prompts[generation_index] = update_input_prompt(self.prompts[generation_index], answer_to_be_eliminated, self.dataset_name)
+                else:
+                    outputs[gen_index]["final_answer"] = majority_vote_answer
+                    self.prompts[generation_index] = None
+            
+            new_prompts = []
+            for prompt_index, prompt in enumerate(self.prompts):
+                if prompt is not None:
+                    index_mapping[len(new_prompts)] = index_mapping[prompt_index]
+                    new_prompts.append(prompt)
                 
         with open(self.output_file, 'w') as f:
             json.dump(outputs, f, indent=4)
