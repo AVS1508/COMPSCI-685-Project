@@ -82,7 +82,7 @@ def get_answer_distribution(sampled_sequences: List[str], dataset_name: str) -> 
         return []
     # Get the answer distribution
     answers, answer_counts = np.unique(answers, return_counts=True)
-    distribution = list(zip([str(answer) for answer in answers], answer_counts))
+    distribution = list(zip([str(answer) for answer in answers], [answer_count/len(sampled_sequences) for answer_count in answer_counts]))
     return sorted(distribution, key=lambda x: x[1], reverse=True)
 
 def get_majority_vote_answer(sampled_sequences: List[str], dataset_name: str) -> str:

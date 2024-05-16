@@ -115,6 +115,8 @@ class ReasoningLLM:
             "majority_vote_answers": [],
         } for i in range(len(self.prompts))]
         
+        index_mapping = {i: i for i in range(len(self.prompts))}
+        
         for time_step in range(1, self.time_steps+1):
             generations = self.model.generate(
                 self.prompts,
