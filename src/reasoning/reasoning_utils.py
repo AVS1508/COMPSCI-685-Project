@@ -137,6 +137,6 @@ def _mathematical_answer_cleaning(sequence: str) -> str:
     answer = [s for s in re.findall(r'-?\d+\.?\d*', sequence.replace(",", ""))]
     # Return the answer if present, else return an empty string
     if len(answer) == 0:
-        return ""
+        return -np.inf
     # Handle the case where the answer ends with a period
-    return answer[-1][:-1] if answer[-1].endswith(".") else answer[-1]
+    return float(answer[-1][:-1] if answer[-1].endswith(".") else answer[-1])
