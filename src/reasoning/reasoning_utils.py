@@ -63,6 +63,28 @@ def convert_dataset_to_prompts_and_answers(dataset: datasets.Dataset, dataset_na
         answers.append(qa_pair[DATASETS_CONFIGURATION[dataset_name]['answer']])
     return prompts, answers
 
+def get_answer_distribution(sampled_sequences: List[str], dataset_name: str) -> List[Tuple[str, int]]:
+    """Get the answer distribution from the sampled sequences
+    
+    Args:
+        sampled_sequences (List[str]): Sampled sequences from the model
+        dataset_name (str): Name of the dataset
+        
+    Returns:
+        List[Tuple[str, int]]: The answer distribution
+    """
+    # Clean the answers and remove empty strings
+    answers = [_answer_cleaning(sequence, dataset_name) for sequence in sampled_sequences]
+    # No longer needed
+    # answers = [answer.strip() for answer in answers if answer != ""]
+    # If no answers are present, return an empty list
+    if len(answers) == 0:
+        return []
+    # Get the answer distribution
+    answers, answer_counts = np.unique(answers, return_counts=True)
+    distribution = list(zip([str(answer) for answer in answers], answer_counts))
+    return sorted(distribution, key=lambda x: x[1], reverse=True)
+
 def get_majority_vote_answer(sampled_sequences: List[str], dataset_name: str) -> str:
     """Get the majority vote answer from the sampled sequences
 
@@ -73,15 +95,14 @@ def get_majority_vote_answer(sampled_sequences: List[str], dataset_name: str) ->
     Returns:
         str: The majority vote answer
     """
-    # Clean the answers and remove empty strings
-    answers = [_answer_cleaning(sequence, dataset_name) for sequence in sampled_sequences]
-    answers = [answer.strip() for answer in answers if answer != ""]
+    
+    answer_distribution = get_answer_distribution(sampled_sequences, dataset_name)
+    
     # If no answers are present, return an empty string
-    if len(answers) == 0:
+    if len(answer_distribution) == 0:
         return ""
-    # Get the majority vote answer
-    answers, answer_counts = np.unique(answers, return_counts=True)
-    return answers[np.argmax(answer_counts)]
+    
+    return answer_distribution[0][0]
 
 def _formulate_prompt(question: str, instruction_tuned: bool, instruction_prefix: str, shots_prefix: str) -> str:
     """Formulate a prompt for the reasoning task

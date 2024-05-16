@@ -29,7 +29,9 @@ class ReasoningArgumentsParser:
         self.parser.add_argument('--greedy', action='store_true', help='Flag to use greedy decoding instead of sampling')
         self.parser.add_argument('--recurring-self-consistency', action='store_true', help='Flag to use the modified self-consistency pipeline instead of the baseline self-consistency')
         # Add arguments for the new pipeline
+        self.parser.add_argument('--use-majority-threshold', '-M', action='store_true', default=False, help='Flag to use majority threshold for termination in the recurrent pipeline')
         self.parser.add_argument('--majority-threshold', '-m', type=float, default=0.5, help='Threshold for the majority consistency for termination in the recurrent pipeline')
+        self.parser.add_argument('--samples-per-time-step', '-s', type=int, default=8, help='Number of samples to generate at each time step in the recurrent pipeline')
         self.parser.add_argument('--time-steps', '-t', type=int, default=5, help='Maximum number of time steps to run the recurrent pipeline for')
         # Add arguments for the randomization seeds
         self.parser.add_argument('--dataset-seed', type=int, default=1379, help='Seed for randomized shuffling of data')
