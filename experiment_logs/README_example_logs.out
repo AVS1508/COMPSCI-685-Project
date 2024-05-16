@@ -1,0 +1,10 @@
+INFO 04-29 13:14:44 llm_engine.py:98] Initializing an LLM engine (v0.4.1) with config: model='facebook/opt-125m', speculative_config=None, tokenizer='facebook/opt-125m', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=False, dtype=torch.float16, max_seq_len=2048, download_dir=None, load_format=auto, tensor_parallel_size=1, disable_custom_all_reduce=False, quantization=None, enforce_eager=False, kv_cache_dtype=auto, quantization_param_path=None, device_config=cuda, decoding_config=DecodingConfig(guided_decoding_backend='outlines'), seed=0)
+INFO 04-29 13:14:44 utils.py:608] Found nccl from library /home/avs/.config/vllm/nccl/cu12/libnccl.so.2.18.1
+INFO 04-29 13:14:44 selector.py:28] Using FlashAttention backend.
+INFO 04-29 13:14:45 weight_utils.py:193] Using model weights format ['*.bin']
+INFO 04-29 13:14:45 model_runner.py:173] Loading model weights took 0.2389 GB
+INFO 04-29 13:14:45 gpu_executor.py:119] # GPU blocks: 10828, # CPU blocks: 7281
+INFO 04-29 13:14:47 model_runner.py:976] Capturing the model for CUDA graphs. This may lead to unexpected consequences if the model is not static. To run the model in eager mode, set 'enforce_eager=True' or use '--enforce-eager' in the CLI.
+INFO 04-29 13:14:47 model_runner.py:980] CUDA graphs can take additional 1~3 GiB memory per GPU. If you are running out of memory, consider decreasing `gpu_memory_utilization` or enforcing eager mode. You can also reduce the `max_num_seqs` as needed to decrease memory usage.
+INFO 04-29 13:14:48 model_runner.py:1057] Graph capturing finished in 1 secs.
+Reasoning results saved to results/baseline_example_output.json
