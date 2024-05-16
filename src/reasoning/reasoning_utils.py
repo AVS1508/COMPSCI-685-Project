@@ -128,6 +128,31 @@ def _formulate_prompt(question: str, instruction_tuned: bool, instruction_prefix
     prompt += shots_prefix + f"Q: {question}\nA:"
     return prompt
 
+def update_input_prompt(prompt: str, answer: str, dataset_name: str) -> str:
+    """Update the input prompt with the answer
+
+    Args:
+        prompt (str): The input prompt
+        answer (str): The answer to update the prompt with
+        dataset_name (str): Name of the dataset
+
+    Returns:
+        str: The updated prompt
+    """
+    if dataset_name not in DATASETS_CONFIGURATION:
+        raise ValueError(f"Dataset {dataset_name} not found.")
+    
+    prompt = prompt.strip()
+    prompt_lines = prompt.split("\n")
+    
+    if not prompt_lines[-2].startswith("Hint:"):
+        prompt_lines.insert(-1, f"{DATASETS_CONFIGURATION[dataset_name]['hint_prefix']}{answer}.")
+    else:
+        prompt_lines[-2] = prompt_lines[-2][:-1]
+        prompt_lines[-2] += f", {answer}."
+    
+    return "\n".join(prompt_lines)
+
 def _answer_cleaning(sequence: str, dataset_name: str) -> str:
     """Extract the answer from the generated sequence
 

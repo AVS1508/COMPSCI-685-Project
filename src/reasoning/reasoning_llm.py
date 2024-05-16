@@ -6,6 +6,7 @@ from reasoning_utils import (
     convert_dataset_to_prompts_and_answers,
     get_majority_vote_answer,
     get_answer_distribution,
+    update_input_prompt,
 )
 
 class ReasoningLLM:
@@ -101,6 +102,8 @@ class ReasoningLLM:
         if not self.recurring_self_consistency:
             raise ValueError("Recurrent self-consistency pipeline not selected")
         
+        if self.use_majority_threshold:
+            raise NotImplementedError("Majority threshold termination not implemented")
         
         outputs = [{
             "input_prompts": [],
@@ -108,6 +111,7 @@ class ReasoningLLM:
             "ground_truth_answers": self.answers[i].split("####")[1].strip(),
             "generated_sequences": [],
             "answer_distribution": [],
+            "answer_eliminated": [],
             "majority_vote_answers": [],
         } for i in range(len(self.prompts))]
         
@@ -122,8 +126,18 @@ class ReasoningLLM:
                 generated_sequences = [generation.outputs[i].text for i in range(len(generation.outputs))]
                 answer_distribution = get_answer_distribution(generated_sequences, self.dataset_name)
                 majority_vote_answer = str(answer_distribution[0][0]) if len(answer_distribution) > 0 else ""
+                multiple_answers = len(answer_distribution) > 1
+                answer_to_be_eliminated = answer_distribution[-1][0] if multiple_answers else None
                 
                 outputs[generation_index]["input_prompts"].append(input_prompt)
                 outputs[generation_index]["generated_sequences"].append(generated_sequences)
                 outputs[generation_index]["answer_distribution"].append(answer_distribution)
+                outputs[generation_index]["answer_eliminated"].append(answer_to_be_eliminated)
                 outputs[generation_index]["majority_vote_answers"].append(majority_vote_answer)
+                
+                if answer_to_be_eliminated is not None and time_step < self.time_steps:
+                    self.prompts[generation_index] = update_input_prompt(self.prompts[generation_index], answer_to_be_eliminated, self.dataset_name)
+                
+        with open(self.output_file, 'w') as f:
+            json.dump(outputs, f, indent=4)
+        print(f"Reasoning results saved to {self.output_file}")
