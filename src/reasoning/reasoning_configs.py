@@ -7,6 +7,7 @@ DATASETS_CONFIGURATION = {
         "answer": "answer",
         "instruction": "Answer the following question with step-by-step mathematical reasoning. Finally, provide the answer in format: 'Therefore, the answer is <answer>.'",
         "is_mathematical": True,
+        "hint_prefix": "INSTRUCTION: Final answer should none of the following answers: ",
     }
 }
 

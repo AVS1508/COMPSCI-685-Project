@@ -63,6 +63,28 @@ def convert_dataset_to_prompts_and_answers(dataset: datasets.Dataset, dataset_na
         answers.append(qa_pair[DATASETS_CONFIGURATION[dataset_name]['answer']])
     return prompts, answers
 
+def get_answer_distribution(sampled_sequences: List[str], dataset_name: str) -> List[Tuple[str, int]]:
+    """Get the answer distribution from the sampled sequences
+    
+    Args:
+        sampled_sequences (List[str]): Sampled sequences from the model
+        dataset_name (str): Name of the dataset
+        
+    Returns:
+        List[Tuple[str, int]]: The answer distribution
+    """
+    # Clean the answers and remove empty strings
+    answers = [_answer_cleaning(sequence, dataset_name) for sequence in sampled_sequences]
+    # No longer needed
+    # answers = [answer.strip() for answer in answers if answer != ""]
+    # If no answers are present, return an empty list
+    if len(answers) == 0:
+        return []
+    # Get the answer distribution
+    answers, answer_counts = np.unique(answers, return_counts=True)
+    distribution = list(zip([str(answer) for answer in answers], [answer_count/len(sampled_sequences) for answer_count in answer_counts]))
+    return sorted(distribution, key=lambda x: x[1], reverse=True)
+
 def get_majority_vote_answer(sampled_sequences: List[str], dataset_name: str) -> str:
     """Get the majority vote answer from the sampled sequences
 
@@ -73,15 +95,14 @@ def get_majority_vote_answer(sampled_sequences: List[str], dataset_name: str) ->
     Returns:
         str: The majority vote answer
     """
-    # Clean the answers and remove empty strings
-    answers = [_answer_cleaning(sequence, dataset_name) for sequence in sampled_sequences]
-    answers = [answer.strip() for answer in answers if answer != ""]
+    
+    answer_distribution = get_answer_distribution(sampled_sequences, dataset_name)
+    
     # If no answers are present, return an empty string
-    if len(answers) == 0:
+    if len(answer_distribution) == 0:
         return ""
-    # Get the majority vote answer
-    answers, answer_counts = np.unique(answers, return_counts=True)
-    return answers[np.argmax(answer_counts)]
+    
+    return answer_distribution[0][0]
 
 def _formulate_prompt(question: str, instruction_tuned: bool, instruction_prefix: str, shots_prefix: str) -> str:
     """Formulate a prompt for the reasoning task
@@ -106,6 +127,31 @@ def _formulate_prompt(question: str, instruction_tuned: bool, instruction_prefix
     # Add the shots prefix and the target question
     prompt += shots_prefix + f"Q: {question}\nA:"
     return prompt
+
+def update_input_prompt(prompt: str, answer: str, dataset_name: str) -> str:
+    """Update the input prompt with the answer
+
+    Args:
+        prompt (str): The input prompt
+        answer (str): The answer to update the prompt with
+        dataset_name (str): Name of the dataset
+
+    Returns:
+        str: The updated prompt
+    """
+    if dataset_name not in DATASETS_CONFIGURATION:
+        raise ValueError(f"Dataset {dataset_name} not found.")
+    
+    prompt = prompt.strip()
+    prompt_lines = prompt.split("\n")
+    
+    if not prompt_lines[-2].startswith(DATASETS_CONFIGURATION[dataset_name]['hint_prefix']):
+        prompt_lines.insert(-1, f"{DATASETS_CONFIGURATION[dataset_name]['hint_prefix']}{answer}.")
+    else:
+        prompt_lines[-2] = prompt_lines[-2][:-1]
+        prompt_lines[-2] += f", {answer}."
+    
+    return "\n".join(prompt_lines)
 
 def _answer_cleaning(sequence: str, dataset_name: str) -> str:
     """Extract the answer from the generated sequence
