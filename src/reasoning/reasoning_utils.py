@@ -145,7 +145,7 @@ def update_input_prompt(prompt: str, answer: str, dataset_name: str) -> str:
     prompt = prompt.strip()
     prompt_lines = prompt.split("\n")
     
-    if not prompt_lines[-2].startswith("Hint:"):
+    if not prompt_lines[-2].startswith(DATASETS_CONFIGURATION[dataset_name]['hint_prefix']):
         prompt_lines.insert(-1, f"{DATASETS_CONFIGURATION[dataset_name]['hint_prefix']}{answer}.")
     else:
         prompt_lines[-2] = prompt_lines[-2][:-1]

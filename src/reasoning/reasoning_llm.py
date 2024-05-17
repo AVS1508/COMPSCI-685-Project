@@ -62,6 +62,19 @@ class ReasoningLLM:
             self.majority_threshold = kwargs['majority_threshold']
             self.num_samples_per_time_step = kwargs['samples_per_time_step']
             self.time_steps = kwargs['time_steps']
+            
+            if kwargs['greedy']:
+                raise ValueError("Greedy decoding not supported for the recurrent pipeline")
+            
+            self.sampling_params = SamplingParams(
+                n = kwargs['samples_per_time_step'],
+                max_tokens=kwargs['max_out_tokens'],
+                seed=kwargs['generation_seed'],
+                temperature=kwargs['temperature'],
+                top_k=kwargs['top_k'],
+                top_p=kwargs['top_p'],
+                stop=kwargs['stop']
+            )
     
     def run_experiment(self) -> None:
         """Run the reasoning experiment based on the specified pipeline
@@ -151,6 +164,7 @@ class ReasoningLLM:
                 if prompt is not None:
                     index_mapping[len(new_prompts)] = index_mapping[prompt_index]
                     new_prompts.append(prompt)
+            self.prompts = new_prompts
                 
         with open(self.output_file, 'w') as f:
             json.dump(outputs, f, indent=4)
